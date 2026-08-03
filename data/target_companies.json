@@ -1,0 +1,11 @@
+{
+  "_readme": "Empresas-alvo para filtrar alumni no LinkedIn Alumni Tool. Agrupadas por categoria. O módulo alumni_research.py usa isso para gerar links prontos. Edite livremente — adicione/remova empresas conforme seu interesse.",
+
+  "big_tech": ["Google", "Apple", "Meta", "Amazon", "Microsoft", "Netflix"],
+  "startups_accelerators": ["Y Combinator", "Stripe", "Databricks", "Scale AI", "OpenAI", "Anthropic"],
+  "consulting_finance": ["McKinsey & Company", "Boston Consulting Group", "Goldman Sachs", "Jane Street"],
+  "vc_funds": ["Andreessen Horowitz", "Sequoia Capital", "Kleiner Perkins"],
+
+  "target_roles": ["Founder", "CEO", "CTO", "Software Engineer", "Product Manager"],
+  "target_locations": ["San Francisco Bay Area", "New York City Metropolitan Area", "Seattle Metropolitan Area"]
+}

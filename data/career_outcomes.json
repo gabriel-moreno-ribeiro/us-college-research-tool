@@ -1,0 +1,78 @@
+{
+  "_readme": "Dados de career outcomes curados de relatórios oficiais publicados pela universidade. Fonte: PDFs/páginas públicas de post-graduation surveys. NÃO inventar dados — só preencher o que está no relatório.",
+
+  "northwestern_university": {
+    "source": "Beyond Northwestern — Class of 2025 (Post-Undergraduate Survey)",
+    "source_url": "https://www.northwestern.edu/careers/resources/post-undergraduate-undergrad-survey/",
+    "pdf_url": "https://www.northwestern.edu/careers/images/w26_beyond-northwestern_web.pdf",
+    "class_year": 2025,
+    "response_rate": "76% (1,748 de 2,314 graduados)",
+    "survey_timing": "6 meses após graduação",
+    "note": "Dados agregados para toda a universidade (inclui McCormick). O dashboard interativo permite filtrar por escola/major, mas os dados abaixo são do PDF summary geral.",
+
+    "overall_status": {
+      "employed": 72,
+      "grad_school_or_fellowship": 24,
+      "military_volunteer_other": 1,
+      "actively_job_searching": 2,
+      "applying_to_grad_school": 1
+    },
+
+    "salary": {
+      "average_overall": 85044,
+      "sample_size": 332,
+      "note": "Somente full-time employed com salário reportado",
+      "by_industry": [
+        {"industry": "Investment Banking", "mean": 115667, "range": [43333, 300000]},
+        {"industry": "Financial Services", "mean": 109974, "range": [55000, 350000]},
+        {"industry": "Technology", "mean": 111542, "range": [36000, 200000]},
+        {"industry": "Engineering", "mean": 96712, "range": [39000, 160000]},
+        {"industry": "Consulting", "mean": 94665, "range": [23500, 135000]},
+        {"industry": "Business Services", "mean": 92365, "range": [55000, 140000]},
+        {"industry": "Law", "mean": 60370, "range": [43000, 80000]},
+        {"industry": "Communications, Marketing, Media", "mean": 58209, "range": [38000, 76500]},
+        {"industry": "Biotechnology, Healthcare, Pharmaceuticals", "mean": 57214, "range": [30000, 110000]},
+        {"industry": "Research, Science", "mean": 51314, "range": [38000, 103000]},
+        {"industry": "Government, Non-Profit, Politics", "mean": 52150, "range": [32100, 87000]},
+        {"industry": "Education, Teaching", "mean": 49083, "range": [22000, 75000]},
+        {"industry": "Entertainment, Sports", "mean": 48920, "range": [30000, 88000]}
+      ]
+    },
+
+    "industry_distribution": [
+      {"industry": "Business Services, Financial Services, Investment Banking", "percent": 25},
+      {"industry": "Engineering", "percent": 17},
+      {"industry": "Consulting", "percent": 12},
+      {"industry": "Communications, Marketing, Media", "percent": 10},
+      {"industry": "Technology", "percent": 9},
+      {"industry": "Biotechnology, Healthcare, Pharmaceuticals", "percent": 5},
+      {"industry": "Entertainment, Sports", "percent": 4},
+      {"industry": "Law", "percent": 4},
+      {"industry": "Education, Teaching", "percent": 4},
+      {"industry": "Research, Science", "percent": 4},
+      {"industry": "Government, Non-Profit, Politics", "percent": 3},
+      {"industry": "Performing, Visual Arts", "percent": 2}
+    ],
+
+    "location_distribution": [
+      {"region": "Illinois", "percent": 40},
+      {"region": "CT, NJ, NY", "percent": 23},
+      {"region": "California", "percent": 11},
+      {"region": "Mid-Atlantic (DE, MD, PA, VA, DC)", "percent": 5},
+      {"region": "Midwest (IN, KS, MI, MN, MO, OH, WI)", "percent": 5},
+      {"region": "Outside the U.S.", "percent": 3},
+      {"region": "Northwest (ID, MT, OR, WA)", "percent": 3},
+      {"region": "New England (MA)", "percent": 3},
+      {"region": "South Central (AR, OK, TX)", "percent": 2},
+      {"region": "Mountain West (AZ, CO, NV, UT, WY)", "percent": 2},
+      {"region": "South/Southeast (FL, GA, KY, NC, TN)", "percent": 2}
+    ],
+
+    "experiential_learning": {
+      "internship_participation": 73,
+      "research_participation": 66,
+      "any_experiential_learning": 91,
+      "deep_involvement_clubs_orgs": 93
+    }
+  }
+}

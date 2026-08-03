@@ -1,0 +1,42 @@
+{
+  "name": "us-college-research",
+  "version": "1.0.0",
+  "description": "US College Research Tool — structured university data, faculty research profiles, and opportunity discovery for prospective students",
+  "author": "Gabriel",
+  "license": "MIT",
+  "skills": [
+    "skills/data-interpretation.md",
+    "skills/web-orchestration.md"
+  ],
+  "commands": [
+    "commands/pesquisar-faculdade.md",
+    "commands/comparar.md",
+    "commands/professores.md",
+    "commands/oportunidades.md",
+    "commands/adicionar-faculdade.md",
+    "commands/atualizar-oportunidades.md"
+  ],
+  "mcpServers": ".mcp.json",
+  "userConfig": {
+    "COLLEGE_SCORECARD_API_KEY": {
+      "description": "API key for the College Scorecard API (U.S. Department of Education). Get one free at https://api.data.gov/signup/",
+      "required": true,
+      "sensitive": true
+    },
+    "SEMANTIC_SCHOLAR_API_KEY": {
+      "description": "API key for Semantic Scholar (increases rate limits for faculty research lookups). Optional — tool works without it but may hit rate limits.",
+      "required": false,
+      "sensitive": true
+    },
+    "FIRECRAWL_API_KEY": {
+      "description": "API key for Firecrawl web search/scraping (increases rate limits). Optional — web search works without it on free tier.",
+      "required": false,
+      "sensitive": true
+    },
+    "EXA_API_KEY": {
+      "description": "API key for Exa semantic web search (removes rate limits). Optional — basic search works without it on free tier.",
+      "required": false,
+      "sensitive": true
+    }
+  }
+}

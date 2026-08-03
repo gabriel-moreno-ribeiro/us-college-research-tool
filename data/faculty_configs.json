@@ -1,0 +1,41 @@
+{
+  "_readme": "Cada chave é um identificador livre (ex: 'mit_cs', 'stanford_bio'). 'card' é o seletor CSS do elemento que se repete para cada professor na página (ex: uma <div> ou <li>). Os outros seletores são RELATIVOS a esse card. Deixe como string vazia '' se o dado não existir na página. O bloco opcional 'profile_selectors' controla a extração enriquecida quando fetch_profiles=True — a heurística por texto de heading (Research Interests, Website, Departments) já cobre a maioria dos casos, então este bloco só é necessário quando a estrutura do site não usa headings padrão.",
+
+  "northwestern_cs": {
+    "university": "Northwestern University",
+    "department": "Computer Science",
+    "url": "https://www.mccormick.northwestern.edu/computer-science/people/faculty/",
+    "selectors": {
+      "card": "div.faculty.cf",
+      "name": ".faculty-info h3 a",
+      "title": ".faculty-info p:first-of-type",
+      "research_areas": "",
+      "email": ".faculty-info a.mail_link",
+      "profile_link": ".faculty-info h3 a"
+    },
+    "profile_selectors": {
+      "_comment": "Northwestern profile pages use h3 headings ('Research Interests', 'Website', 'Departments') without distinctive class names, so the heuristic works out of the box. Left empty."
+    },
+    "notes": "McCormick School of Engineering - CS dept. ~87 faculty members. Listing page has NO research_area — that field is only on the individual profile page. Use fetch_profiles=True to enrich."
+  },
+
+  "example_university_cs_dept": {
+    "university": "Example University",
+    "department": "Computer Science",
+    "url": "https://cs.example.edu/people/faculty",
+    "selectors": {
+      "card": ".faculty-card",
+      "name": ".faculty-name",
+      "title": ".faculty-title",
+      "research_areas": ".faculty-research-areas",
+      "email": ".faculty-email",
+      "profile_link": "a.faculty-profile-link"
+    },
+    "profile_selectors": {
+      "bio": ".faculty-bio",
+      "lab_url": "a.faculty-lab-link",
+      "departments": ".faculty-departments"
+    },
+    "notes": "Config placeholder. Substitua pela estrutura real do site que você quiser pesquisar — inspecione o HTML e ajuste os seletores CSS acima. O bloco 'profile_selectors' é opcional; se ausente, a heurística por texto de heading tenta extrair automaticamente."
+  }
+}

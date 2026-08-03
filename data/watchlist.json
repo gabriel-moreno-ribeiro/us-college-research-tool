@@ -1,0 +1,11 @@
+{
+  "_readme": "Lista de universidades para modo batch. Cada entrada mapeia para os argumentos do main.py.",
+  "universities": [
+    {
+      "name": "Northwestern University",
+      "department": "Computer Science / ECE (McCormick School of Engineering)",
+      "faculty_config_key": "northwestern_cs",
+      "field": "Computer Science"
+    }
+  ]
+}

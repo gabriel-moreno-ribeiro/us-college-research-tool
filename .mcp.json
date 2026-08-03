@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "us-college-research": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["-m", "mcp_server"],
+      "env": {
+        "COLLEGE_SCORECARD_API_KEY": "${COLLEGE_SCORECARD_API_KEY}",
+        "SEMANTIC_SCHOLAR_API_KEY": "${SEMANTIC_SCHOLAR_API_KEY}"
+      }
+    },
+    "firecrawl": {
+      "type": "http",
+      "url": "https://mcp.firecrawl.dev/v2/mcp"
+    },
+    "exa": {
+      "type": "http",
+      "url": "https://mcp.exa.ai/mcp"
+    }
+  }
+}

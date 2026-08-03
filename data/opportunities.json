@@ -1,0 +1,104 @@
+{
+  "_readme": "Oportunidades curadas por universidade. Cada bloco é pesquisado manualmente nos sites oficiais — não invente dados. Fontes nos campos 'url'.",
+
+  "northwestern_university": {
+    "incubators_accelerators": [
+      {
+        "name": "The Garage",
+        "description": "Hub de empreendedorismo da Northwestern. Espaço colaborativo + comunidade + mentoria para startups de alunos. Já apoiou 1.500+ startups. Mais de 500 mentores disponíveis.",
+        "programs": ["Jumpstart (programa de aceleração)", "Residency Program (residência para startups em estágio mais avançado)"],
+        "url": "https://thegarage.northwestern.edu/"
+      }
+    ],
+    "entrepreneurship_centers": [
+      {
+        "name": "Farley Center for Entrepreneurship and Innovation",
+        "description": "Centro de empreendedorismo baseado na McCormick School of Engineering, mas aberto a toda a universidade. Oferece minor em Entrepreneurship, cursos NUvention (team-based, experienciais), e o fellowship de verão.",
+        "programs": [
+          "Undergraduate Minor in Entrepreneurship",
+          "NUvention Courses (cursos experienciais de desenvolvimento de startup)",
+          "Morehead Family Innovator Fellowship (programa de verão de 10 semanas para startups de alunos)"
+        ],
+        "url": "https://farley.northwestern.edu/"
+      }
+    ],
+    "competitions": [
+      {
+        "name": "VentureCat",
+        "description": "Competição anual de startups da Northwestern. Grand prize de $100,000.",
+        "url": "https://farley.northwestern.edu/venturecat/"
+      },
+      {
+        "name": "WildHacks",
+        "description": "Hackathon anual da Northwestern, afiliado à Major League Hacking (MLH).",
+        "url": "https://www.wildhacks.net/"
+      }
+    ],
+    "undergrad_research": [
+      {
+        "name": "Summer Undergraduate Research Grants (SURG)",
+        "description": "Financiamento para pesquisa independente no verão. Inclui bootcamp de escrita de propostas no inverno.",
+        "url": "https://undergradresearch.northwestern.edu/"
+      },
+      {
+        "name": "Academic Year Undergraduate Research Grants (AYURG)",
+        "description": "Financiamento para pesquisa independente durante o ano letivo (fall/winter/spring).",
+        "url": "https://undergradresearch.northwestern.edu/"
+      },
+      {
+        "name": "Undergraduate Research Assistant Program (URAP)",
+        "description": "Pareamento com faculty mentors + financiamento para posições de research assistant.",
+        "url": "https://undergradresearch.northwestern.edu/"
+      },
+      {
+        "name": "Conference Travel Grants (CTG)",
+        "description": "Financiamento para alunos apresentarem pesquisa em conferências.",
+        "url": "https://undergradresearch.northwestern.edu/"
+      },
+      {
+        "name": "Emerging Scholars Program (ESP)",
+        "description": "Programa dedicado com trilha própria de financiamento para pesquisa undergrad.",
+        "url": "https://undergradresearch.northwestern.edu/"
+      }
+    ],
+    "student_clubs_tech": [
+      {
+        "name": "Women in Computing (WiC)",
+        "description": "Rede acadêmica e social para mulheres em CS.",
+        "url": "https://www.wic.cs.northwestern.edu/"
+      },
+      {
+        "name": "Develop + Innovate for Social Change (DISC)",
+        "description": "Usa tech skills para impacto social — trabalha com nonprofits locais.",
+        "url": ""
+      },
+      {
+        "name": "Emerging Coders",
+        "description": "Comunidade para alunos FGLI (first-generation, low-income) interessados em tech. Mentoria, projetos, skill-building.",
+        "url": "http://emergingcoders.org/"
+      },
+      {
+        "name": "Northwestern University Technology Group (NTech)",
+        "description": "Duas divisões: web development (projetos reais) e quant (trading games, estratégias de assets).",
+        "url": ""
+      },
+      {
+        "name": "Responsible AI Student Organization (RAISO)",
+        "description": "Comunidade de AI aberta a alunos técnicos e não-técnicos. Foco em AI responsável e impacto social.",
+        "url": ""
+      }
+    ],
+    "career_centers": [
+      {
+        "name": "Northwestern Career Advancement (NCA)",
+        "description": "Centro principal de carreira. Oferece advising, feiras, Handshake (plataforma de vagas), mock interviews, VMock (review automatizado de CV).",
+        "programs": [
+          "SIGP (Summer Internship Grant Program) — financiamento para estágios não-remunerados",
+          "Career Treks — visitas a empresas + networking com alumni",
+          "NEXT (Northwestern Externship Program) — job shadowing de curto prazo"
+        ],
+        "url": "https://www.northwestern.edu/careers/"
+      }
+    ]
+  }
+}
