@@ -10,4 +10,6 @@ services:
         value: http
       - key: PYTHON_VERSION
         value: "3.13"
+      - key: RENDER_EXTERNAL_URL
+        value: https://us-college-research-tool.onrender.com
     plan: free

@@ -113,7 +113,37 @@ def _cache_meta(source: str, key: str) -> dict[str, Any]:
 # MCP Server
 # ============================================================
 
-mcp = MCPServer("us-college-research")
+import os as _os
+
+def _build_server() -> MCPServer:
+    """Build MCPServer with OAuth when running in HTTP mode."""
+    if _os.environ.get("MCP_TRANSPORT") == "http":
+        from mcp.server.auth.settings import AuthSettings, ClientRegistrationOptions
+        from .oauth_provider import SimpleOAuthProvider
+
+        issuer_url = _os.environ.get(
+            "RENDER_EXTERNAL_URL",
+            f"http://localhost:{_os.environ.get('PORT', '8000')}",
+        )
+
+        auth_settings = AuthSettings(
+            issuer_url=issuer_url,
+            client_registration_options=ClientRegistrationOptions(
+                enabled=True,
+                valid_scopes=["read"],
+                default_scopes=["read"],
+            ),
+            required_scopes=None,
+            resource_server_url=issuer_url,
+        )
+        return MCPServer(
+            "us-college-research",
+            auth_server_provider=SimpleOAuthProvider(),
+            auth=auth_settings,
+        )
+    return MCPServer("us-college-research")
+
+mcp = _build_server()
 
 
 # ============================================================
