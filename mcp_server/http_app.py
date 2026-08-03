@@ -120,8 +120,15 @@ async def health_check(request: Request) -> Response:
 
 def create_app() -> Starlette:
     """Create the full ASGI app with MCP + middleware."""
-    # Get the MCP Starlette app (stateless for scalability on free tier)
-    mcp_app = mcp.streamable_http_app(stateless_http=True)
+    from mcp.server.transport_security import TransportSecuritySettings
+
+    mcp_app = mcp.streamable_http_app(
+        stateless_http=True,
+        host="0.0.0.0",
+        transport_security=TransportSecuritySettings(
+            enable_dns_rebinding_protection=False,
+        ),
+    )
 
     app = Starlette(
         routes=[
