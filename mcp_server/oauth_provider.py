@@ -14,7 +14,6 @@ from __future__ import annotations
 import secrets
 import time
 from dataclasses import dataclass, field
-from typing import Any
 
 from mcp.server.auth.provider import (
     AccessToken,
@@ -45,14 +44,14 @@ class RefreshTokenData:
     expires_at: float
 
 
-class SimpleOAuthProvider(OAuthAuthorizationServerProvider[AuthCode, RefreshTokenData, str]):
+class SimpleOAuthProvider(OAuthAuthorizationServerProvider[AuthCode, RefreshTokenData, AccessToken]):
     """In-memory OAuth provider that auto-approves everything."""
 
     def __init__(self) -> None:
         self._clients: dict[str, OAuthClientInformationFull] = {}
         self._auth_codes: dict[str, AuthCode] = {}
         self._refresh_tokens: dict[str, RefreshTokenData] = {}
-        self._access_tokens: dict[str, dict[str, Any]] = {}
+        self._access_tokens: dict[str, AccessToken] = {}
 
     async def get_client(self, client_id: str) -> OAuthClientInformationFull | None:
         return self._clients.get(client_id)
@@ -94,11 +93,12 @@ class SimpleOAuthProvider(OAuthAuthorizationServerProvider[AuthCode, RefreshToke
         self._auth_codes.pop(authorization_code.code, None)
         access_token = secrets.token_urlsafe(32)
         refresh_token = secrets.token_urlsafe(32)
-        self._access_tokens[access_token] = {
-            "client_id": client.client_id,
-            "scopes": authorization_code.scopes,
-            "created_at": time.time(),
-        }
+        self._access_tokens[access_token] = AccessToken(
+            token=access_token,
+            client_id=client.client_id,
+            scopes=authorization_code.scopes,
+            expires_at=int(time.time()) + 3600 * 24 * 365,
+        )
         self._refresh_tokens[refresh_token] = RefreshTokenData(
             token=refresh_token,
             client_id=client.client_id,
@@ -129,11 +129,12 @@ class SimpleOAuthProvider(OAuthAuthorizationServerProvider[AuthCode, RefreshToke
         self._refresh_tokens.pop(refresh_token.token, None)
         access_token = secrets.token_urlsafe(32)
         new_refresh = secrets.token_urlsafe(32)
-        self._access_tokens[access_token] = {
-            "client_id": client.client_id,
-            "scopes": scopes or refresh_token.scopes,
-            "created_at": time.time(),
-        }
+        self._access_tokens[access_token] = AccessToken(
+            token=access_token,
+            client_id=client.client_id,
+            scopes=scopes or refresh_token.scopes,
+            expires_at=int(time.time()) + 3600 * 24 * 365,
+        )
         self._refresh_tokens[new_refresh] = RefreshTokenData(
             token=new_refresh,
             client_id=client.client_id,
@@ -147,14 +148,11 @@ class SimpleOAuthProvider(OAuthAuthorizationServerProvider[AuthCode, RefreshToke
             refresh_token=new_refresh,
         )
 
-    async def load_access_token(self, token: str) -> str | None:
-        if token in self._access_tokens:
-            return token
-        return None
+    async def load_access_token(self, token: str) -> AccessToken | None:
+        return self._access_tokens.get(token)
 
-    async def revoke_token(self, token: AuthCode | RefreshTokenData | str) -> None:
-        if isinstance(token, str):
-            self._access_tokens.pop(token, None)
-            self._refresh_tokens.pop(token, None)
+    async def revoke_token(self, token: AuthCode | RefreshTokenData | AccessToken) -> None:
+        if isinstance(token, AccessToken):
+            self._access_tokens.pop(token.token, None)
         elif isinstance(token, RefreshTokenData):
             self._refresh_tokens.pop(token.token, None)

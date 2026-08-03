@@ -8,11 +8,10 @@ import time
 from collections import defaultdict
 
 from starlette.applications import Starlette
-from starlette.middleware import Middleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
-from starlette.routing import Route, Mount
+from starlette.routing import Route
 
 from .key_context import set_keys, clear_keys
 from .server import mcp
@@ -130,14 +129,9 @@ def create_app() -> Starlette:
         ),
     )
 
-    app = Starlette(
-        routes=[
-            Route("/health", health_check, methods=["GET"]),
-            Mount("/", app=mcp_app),
-        ],
-        middleware=[
-            Middleware(RateLimitMiddleware),
-            Middleware(BYOKMiddleware),
-        ],
-    )
-    return app
+    # Add health check and middleware directly to the MCP app to preserve
+    # its lifespan (which starts the StreamableHTTPSessionManager).
+    mcp_app.routes.insert(0, Route("/health", health_check, methods=["GET"]))
+    mcp_app.add_middleware(BYOKMiddleware)
+    mcp_app.add_middleware(RateLimitMiddleware)
+    return mcp_app
