@@ -11,12 +11,10 @@ what actually gate access to upstream APIs.
 """
 from __future__ import annotations
 
-import hashlib
 import secrets
 import time
+from dataclasses import dataclass, field
 from typing import Any
-
-from pydantic import AnyUrl
 
 from mcp.server.auth.provider import (
     AccessToken,
@@ -26,13 +24,35 @@ from mcp.server.auth.provider import (
 from mcp.shared.auth import OAuthClientInformationFull, OAuthToken
 
 
-class SimpleOAuthProvider(OAuthAuthorizationServerProvider[str, str, str]):
+@dataclass
+class AuthCode:
+    """Authorization code with metadata the SDK token handler needs."""
+    code: str
+    client_id: str
+    redirect_uri: str
+    redirect_uri_provided_explicitly: bool
+    code_challenge: str
+    scopes: list[str]
+    expires_at: float
+
+
+@dataclass
+class RefreshTokenData:
+    """Refresh token with metadata the SDK token handler needs."""
+    token: str
+    client_id: str
+    scopes: list[str]
+    expires_at: float
+
+
+class SimpleOAuthProvider(OAuthAuthorizationServerProvider[AuthCode, RefreshTokenData, str]):
     """In-memory OAuth provider that auto-approves everything."""
 
     def __init__(self) -> None:
         self._clients: dict[str, OAuthClientInformationFull] = {}
-        self._auth_codes: dict[str, dict[str, Any]] = {}
-        self._tokens: dict[str, dict[str, Any]] = {}
+        self._auth_codes: dict[str, AuthCode] = {}
+        self._refresh_tokens: dict[str, RefreshTokenData] = {}
+        self._access_tokens: dict[str, dict[str, Any]] = {}
 
     async def get_client(self, client_id: str) -> OAuthClientInformationFull | None:
         return self._clients.get(client_id)
@@ -44,13 +64,15 @@ class SimpleOAuthProvider(OAuthAuthorizationServerProvider[str, str, str]):
         self, client: OAuthClientInformationFull, params: AuthorizationParams
     ) -> str:
         code = secrets.token_urlsafe(32)
-        self._auth_codes[code] = {
-            "client_id": client.client_id,
-            "redirect_uri": str(params.redirect_uri),
-            "code_challenge": params.code_challenge,
-            "scopes": params.scopes or [],
-            "created_at": time.time(),
-        }
+        self._auth_codes[code] = AuthCode(
+            code=code,
+            client_id=client.client_id,
+            redirect_uri=str(params.redirect_uri),
+            redirect_uri_provided_explicitly=params.redirect_uri_provided_explicitly,
+            code_challenge=params.code_challenge,
+            scopes=params.scopes or [],
+            expires_at=time.time() + 600,
+        )
         redirect = str(params.redirect_uri)
         separator = "&" if "?" in redirect else "?"
         url = f"{redirect}{separator}code={code}"
@@ -60,30 +82,29 @@ class SimpleOAuthProvider(OAuthAuthorizationServerProvider[str, str, str]):
 
     async def load_authorization_code(
         self, client: OAuthClientInformationFull, authorization_code: str
-    ) -> str | None:
-        if authorization_code in self._auth_codes:
-            data = self._auth_codes[authorization_code]
-            if data["client_id"] == client.client_id:
-                return authorization_code
+    ) -> AuthCode | None:
+        auth_code = self._auth_codes.get(authorization_code)
+        if auth_code and auth_code.client_id == client.client_id:
+            return auth_code
         return None
 
     async def exchange_authorization_code(
-        self, client: OAuthClientInformationFull, authorization_code: str
+        self, client: OAuthClientInformationFull, authorization_code: AuthCode
     ) -> OAuthToken:
-        data = self._auth_codes.pop(authorization_code, {})
+        self._auth_codes.pop(authorization_code.code, None)
         access_token = secrets.token_urlsafe(32)
         refresh_token = secrets.token_urlsafe(32)
-        self._tokens[access_token] = {
+        self._access_tokens[access_token] = {
             "client_id": client.client_id,
-            "scopes": data.get("scopes", []),
+            "scopes": authorization_code.scopes,
             "created_at": time.time(),
         }
-        self._tokens[refresh_token] = {
-            "client_id": client.client_id,
-            "scopes": data.get("scopes", []),
-            "created_at": time.time(),
-            "is_refresh": True,
-        }
+        self._refresh_tokens[refresh_token] = RefreshTokenData(
+            token=refresh_token,
+            client_id=client.client_id,
+            scopes=authorization_code.scopes,
+            expires_at=time.time() + 3600 * 24 * 365,
+        )
         return OAuthToken(
             access_token=access_token,
             token_type="Bearer",
@@ -93,32 +114,32 @@ class SimpleOAuthProvider(OAuthAuthorizationServerProvider[str, str, str]):
 
     async def load_refresh_token(
         self, client: OAuthClientInformationFull, refresh_token: str
-    ) -> str | None:
-        data = self._tokens.get(refresh_token)
-        if data and data.get("is_refresh") and data["client_id"] == client.client_id:
-            return refresh_token
+    ) -> RefreshTokenData | None:
+        data = self._refresh_tokens.get(refresh_token)
+        if data and data.client_id == client.client_id:
+            return data
         return None
 
     async def exchange_refresh_token(
         self,
         client: OAuthClientInformationFull,
-        refresh_token: str,
+        refresh_token: RefreshTokenData,
         scopes: list[str],
     ) -> OAuthToken:
-        self._tokens.pop(refresh_token, None)
+        self._refresh_tokens.pop(refresh_token.token, None)
         access_token = secrets.token_urlsafe(32)
         new_refresh = secrets.token_urlsafe(32)
-        self._tokens[access_token] = {
+        self._access_tokens[access_token] = {
             "client_id": client.client_id,
-            "scopes": scopes,
+            "scopes": scopes or refresh_token.scopes,
             "created_at": time.time(),
         }
-        self._tokens[new_refresh] = {
-            "client_id": client.client_id,
-            "scopes": scopes,
-            "created_at": time.time(),
-            "is_refresh": True,
-        }
+        self._refresh_tokens[new_refresh] = RefreshTokenData(
+            token=new_refresh,
+            client_id=client.client_id,
+            scopes=scopes or refresh_token.scopes,
+            expires_at=time.time() + 3600 * 24 * 365,
+        )
         return OAuthToken(
             access_token=access_token,
             token_type="Bearer",
@@ -127,20 +148,13 @@ class SimpleOAuthProvider(OAuthAuthorizationServerProvider[str, str, str]):
         )
 
     async def load_access_token(self, token: str) -> str | None:
-        if token in self._tokens and not self._tokens[token].get("is_refresh"):
+        if token in self._access_tokens:
             return token
         return None
 
-    async def revoke_token(self, token: str) -> None:
-        self._tokens.pop(token, None)
-
-    async def verify_access_token(self, token: str) -> AccessToken | None:
-        data = self._tokens.get(token)
-        if not data or data.get("is_refresh"):
-            return None
-        return AccessToken(
-            token=token,
-            client_id=data["client_id"],
-            scopes=data.get("scopes", []),
-            expires_at=int(data["created_at"] + 3600 * 24 * 365),
-        )
+    async def revoke_token(self, token: AuthCode | RefreshTokenData | str) -> None:
+        if isinstance(token, str):
+            self._access_tokens.pop(token, None)
+            self._refresh_tokens.pop(token, None)
+        elif isinstance(token, RefreshTokenData):
+            self._refresh_tokens.pop(token.token, None)
