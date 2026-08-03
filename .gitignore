@@ -1,8 +1,13 @@
 .env
+.env.*
+!.env.example
 __pycache__/
 *.pyc
+*.db
+!data/.gitkeep
 output/
+output/sources/
+logs/
 .venv/
 venv/
-data/cache.db
 .claude/

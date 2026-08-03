@@ -36,12 +36,13 @@ Suporta **modo batch** para gerar relatórios de várias universidades + tabela 
 
 ## Setup
 
-### Requisitos
+### Local Development (stdio mode)
 
+**Requisitos:**
 - Python 3.10+
 - Chave de API do College Scorecard (gratuita)
 
-### Instalação
+**Instalação:**
 
 ```bash
 python -m venv .venv
@@ -191,6 +192,50 @@ python scripts/smoke_test_mcp.py
 - **Homônimos**: Professores com nomes comuns podem ter match incorreto. O campo `identification_confidence` sinaliza isso, mas não resolve 100%.
 - **Pesquisa web ≠ dado verificado**: Informações obtidas via Firecrawl/Exa não têm a mesma garantia de proveniência que dados do College Scorecard ou ORCID. O campo `extraction_basis` classifica a confiabilidade da fonte.
 - **Oportunidades desatualizam**: Programas mudam, URLs quebram. Dados curados em `opportunities.json` precisam de revisão periódica.
+
+## Remote Deployment (HTTP mode / BYOK)
+
+The server supports deployment as a **remote HTTP connector** where each user brings their own API key (BYOK). This enables:
+- Multi-user deployments without sharing credentials
+- Claude.ai custom connector integration
+- Rate limiting and security hardening
+
+### Quick Deploy to Render.com (Free Tier)
+
+1. Push this repo to GitHub
+2. Connect Render to your repo
+3. Render auto-detects `render.yaml` and deploys
+4. Your MCP server runs at `https://<your-app>.onrender.com`
+
+### Docker Deployment
+
+```bash
+docker build -t us-college-research-mcp .
+docker run -d -p 8000:8000 -e MCP_TRANSPORT=http us-college-research-mcp
+```
+
+### Manual HTTP Mode
+
+```bash
+MCP_TRANSPORT=http PORT=8000 python -m mcp_server
+```
+
+Server listens on `0.0.0.0:8000` with:
+- Health check: `GET /health`
+- MCP endpoint: `POST /`
+- Rate limit: 60 req/min per IP
+- BYOK headers: `X-College-Scorecard-Key`, `X-Semantic-Scholar-Key`
+
+### Claude.ai Custom Connector Setup
+
+1. Deploy server (Render/Docker/VM)
+2. In Claude.ai → Settings → Connectors → Add Remote Connector
+3. URL: `https://your-deployment.com`
+4. Add secrets:
+   - `X-College-Scorecard-Key` (your Scorecard key)
+   - `X-Semantic-Scholar-Key` (optional)
+
+See **`DEPLOYMENT.md`** for complete guide.
 
 ## Exemplos de Conversas que Funcionam Bem
 

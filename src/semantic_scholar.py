@@ -20,16 +20,31 @@ from typing import Any
 import requests
 
 from . import cache
+from .source_tracker import record_source
 
 BASE_URL = "https://api.semanticscholar.org/graph/v1"
 
 
 @dataclass
 class SemanticScholarClient:
-    api_key: str | None = field(default_factory=lambda: os.environ.get("SEMANTIC_SCHOLAR_API_KEY"))
+    api_key: str | None = None
     session: requests.Session = field(default_factory=requests.Session)
     min_delay_seconds: float = 3.5  # respeita rate limit sem key (1 req/seg oficial, margem extra)
     max_retries: int = 5
+
+    def __post_init__(self) -> None:
+        # If no explicit key provided, try environment variable, then try BYOK context
+        if self.api_key is None:
+            self.api_key = os.environ.get("SEMANTIC_SCHOLAR_API_KEY")
+        if self.api_key is None:
+            # Try BYOK context (if we're in an HTTP request context)
+            try:
+                from mcp_server.key_context import get_semantic_scholar_key
+                ctx_key = get_semantic_scholar_key()
+                if ctx_key:
+                    self.api_key = ctx_key
+            except (ImportError, LookupError):
+                pass  # Not in HTTP context or module not available
 
     def _headers(self) -> dict[str, str]:
         return {"x-api-key": self.api_key} if self.api_key else {}
@@ -76,6 +91,14 @@ class SemanticScholarClient:
                 {"query": name, "fields": "name,affiliations,paperCount,citationCount,hIndex,url"},
             )
             results = data.get("data", [])
+            # Track Semantic Scholar search
+            if results:
+                record_source(
+                    url="https://www.semanticscholar.org/",
+                    title=f"Semantic Scholar - Author Search: {name}",
+                    university=affiliation_hint,
+                    category="research"
+                )
             cache.put("semantic_scholar", cache_key, results)
         if affiliation_hint:
             hint = affiliation_hint.lower()

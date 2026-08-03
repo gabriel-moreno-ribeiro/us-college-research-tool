@@ -19,6 +19,7 @@ from typing import Any
 import requests
 
 from . import cache
+from .source_tracker import record_source
 
 BASE_URL = "https://pub.orcid.org/v3.0"
 HEADERS = {"Accept": "application/json"}
@@ -109,6 +110,14 @@ class OrcidClient:
         data = self._get(f"{BASE_URL}/{orcid_id}/record")
         if not data:
             return None
+
+        # Track ORCID profile
+        record_source(
+            url=f"https://orcid.org/{orcid_id}",
+            title=f"ORCID Profile - {orcid_id}",
+            university=None,
+            category="research"
+        )
 
         person = data.get("person", {})
         name_data = person.get("name", {})

@@ -20,6 +20,7 @@ from typing import Any
 import requests
 
 from . import cache
+from .source_tracker import record_source
 
 SEARCH_URL = "https://dblp.org/search/author/api"
 PID_XML_TEMPLATE = "https://dblp.org/pid/{pid}.xml"
@@ -132,6 +133,15 @@ class DblpClient:
                     affiliation=affiliation,
                     url=url_str,
                 ))
+
+        # Track DBLP search
+        if authors:
+            record_source(
+                url="https://dblp.org/",
+                title=f"DBLP - Author Search: {name}",
+                university=None,
+                category="research"
+            )
 
         cache.put("dblp", cache_key, [
             {"pid": a.pid, "name": a.name, "affiliation": a.affiliation, "url": a.url}

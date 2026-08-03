@@ -41,6 +41,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from . import cache
+from .source_tracker import record_source
 
 CONFIG_PATH = Path(__file__).parent.parent / "data" / "faculty_configs.json"
 
@@ -315,6 +316,13 @@ def _enrich_from_profile(
         if html is None:
             # Fetch failed — leave member as-is, but do NOT cache the failure
             return member
+        # Track the profile page
+        record_source(
+            url=member.profile_url,
+            title=f"Faculty Profile - {member.name}",
+            university=None,  # Will be inferred from domain
+            category="faculty"
+        )
         cached = _extract_profile_data(html, member.profile_url, profile_selectors)
         cache.put("faculty_profile", cache_key, cached)
 
@@ -373,6 +381,15 @@ def scrape_faculty(
     html = _fetch_page(url, user_agent, delay_seconds)
     if html is None:
         raise RuntimeError(f"Faculty scraper: falha ao acessar {url}")
+
+    # Track the faculty listing page
+    university_name = cfg.get("university", university_key)
+    record_source(
+        url=url,
+        title=f"Faculty Directory - {university_name}",
+        university=university_name,
+        category="faculty"
+    )
 
     soup = BeautifulSoup(html, "html.parser")
     members: list[FacultyMember] = []

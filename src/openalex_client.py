@@ -23,6 +23,7 @@ from typing import Any
 import requests
 
 from . import cache
+from .source_tracker import record_source
 
 BASE_URL = "https://api.openalex.org"
 
@@ -101,6 +102,15 @@ class OpenAlexClient:
                 works_count=a.get("works_count") or 0,
                 h_index=(a.get("summary_stats") or {}).get("h_index"),
             ))
+
+        # Track OpenAlex search
+        if authors:
+            record_source(
+                url="https://openalex.org/",
+                title=f"OpenAlex - Author Search: {name}",
+                university=None,
+                category="research"
+            )
 
         cache.put("openalex", cache_key, [
             {

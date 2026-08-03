@@ -203,10 +203,25 @@ def main() -> None:
                         help="Ignora cache local e busca tudo de novo nas APIs.")
     parser.add_argument("--html", action="store_true",
                         help="Gera também uma versão HTML do relatório.")
+    parser.add_argument("--export-sources", action="store_true",
+                        help="Export consulted source URLs for NotebookLM.")
     args = parser.parse_args()
 
     if args.no_cache:
         cache.set_enabled(False)
+
+    if args.export_sources:
+        from src.source_tracker import export_sources, get_sources
+        sources = get_sources()
+        files = export_sources()
+        output_dir = OUTPUT_DIR / "sources"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        for fname, content in files.items():
+            (output_dir / fname).write_text(content, encoding="utf-8")
+        console.print(f"[green]✓[/] Exported {len(sources)} sources to {output_dir}")
+        for fname in files.keys():
+            console.print(f"  - {output_dir / fname}")
+        return
 
     if args.batch:
         _run_batch(args)

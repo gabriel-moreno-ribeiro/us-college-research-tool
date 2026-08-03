@@ -71,7 +71,13 @@ _scorecard_api_key_present: bool | None = None
 
 
 def _check_scorecard_key() -> str | None:
-    """Returns the API key or None. Caches result."""
+    """Returns the API key or None. Checks BYOK context first, then env."""
+    from .key_context import get_scorecard_key
+    # BYOK: check per-request context first
+    ctx_key = get_scorecard_key()
+    if ctx_key:
+        return ctx_key
+    # Fallback: env var (for local stdio development)
     global _scorecard_api_key_present
     import os
     load_dotenv(PROJECT_ROOT / ".env")
@@ -127,15 +133,17 @@ def search_university(
     Only covers US institutions (College Scorecard data). For non-US universities,
     returns OUT_OF_SCOPE."""
 
-    if not _check_scorecard_key():
+    key = _check_scorecard_key()
+    if not key:
         return _error_response(
             STATUS_NOT_CONFIGURED,
-            "COLLEGE_SCORECARD_API_KEY not set. Get a free key at https://api.data.gov/signup/ "
-            "and add it to .env or pass as environment variable.",
+            "COLLEGE_SCORECARD_API_KEY not provided. To use this tool:\n"
+            "1. Get a free API key at https://api.data.gov/signup/\n"
+            "2. Add it as the X-College-Scorecard-Key header in your connector configuration.\n"
+            "For local development, set COLLEGE_SCORECARD_API_KEY in your .env file.",
         )
-
     try:
-        client = CollegeScorecardClient()
+        client = CollegeScorecardClient(api_key=key)
         results = client.search_school(query)
     except RuntimeError as e:
         err_msg = str(e)
@@ -242,14 +250,18 @@ def get_university_overview(
     Only works for US institutions — non-US universities return OUT_OF_SCOPE.
     Data has a ~2 year lag from the Department of Education."""
 
-    if not _check_scorecard_key():
+    key = _check_scorecard_key()
+    if not key:
         return _error_response(
             STATUS_NOT_CONFIGURED,
-            "COLLEGE_SCORECARD_API_KEY not set. Get a free key at https://api.data.gov/signup/",
+            "COLLEGE_SCORECARD_API_KEY not provided. To use this tool:\n"
+            "1. Get a free API key at https://api.data.gov/signup/\n"
+            "2. Add it as the X-College-Scorecard-Key header in your connector configuration.\n"
+            "For local development, set COLLEGE_SCORECARD_API_KEY in your .env file.",
         )
 
     try:
-        client = CollegeScorecardClient()
+        client = CollegeScorecardClient(api_key=key)
         school = client.get_by_exact_name(university_name)
     except RuntimeError as e:
         return _error_response(STATUS_UPSTREAM_ERROR, str(e))
@@ -746,11 +758,18 @@ def compare_universities(
 
     Use search_university first to resolve exact names. Only works for US institutions."""
 
-    if not _check_scorecard_key():
-        return _error_response(STATUS_NOT_CONFIGURED, "COLLEGE_SCORECARD_API_KEY not set.")
+    key = _check_scorecard_key()
+    if not key:
+        return _error_response(
+            STATUS_NOT_CONFIGURED,
+            "COLLEGE_SCORECARD_API_KEY not provided. To use this tool:\n"
+            "1. Get a free API key at https://api.data.gov/signup/\n"
+            "2. Add it as the X-College-Scorecard-Key header in your connector configuration.\n"
+            "For local development, set COLLEGE_SCORECARD_API_KEY in your .env file.",
+        )
 
     try:
-        client = CollegeScorecardClient()
+        client = CollegeScorecardClient(api_key=key)
     except ValueError as e:
         return _error_response(STATUS_NOT_CONFIGURED, str(e))
 
@@ -1196,6 +1215,38 @@ def draft_opportunities(
                     "under the university slug. Do NOT save without human approval.",
         },
     )
+
+
+@mcp.tool(annotations=ToolAnnotations(read_only_hint=True))
+def export_sources(
+    university: Annotated[str | None, Field(description="Filter by university name")] = None,
+    category: Annotated[str | None, Field(description="Filter by category")] = None,
+    official_only: Annotated[bool, Field(description="Only official .edu domains")] = False,
+) -> dict[str, Any]:
+    """Export all URLs consulted during research, for use with NotebookLM.
+
+    Returns consulted source URLs in three formats:
+    - urls.txt: plain list (for NotebookLM bulk import)
+    - urls-oficiais.txt: only official .edu domains
+    - fontes.md: formatted Markdown with metadata
+
+    Files are written to output/sources/ and the tool returns a preview.
+
+    Use this to create a source list for NotebookLM fact-checking or to audit
+    which pages were consulted during research."""
+    from src.source_tracker import export_sources as _export, get_sources
+    sources = get_sources(university=university, category=category, official_only=official_only)
+    files = _export(university=university, category=category, official_only=official_only)
+    # Also write to disk
+    output_dir = OUTPUT_DIR / "sources"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    for fname, content in files.items():
+        (output_dir / fname).write_text(content, encoding="utf-8")
+    return _ok_response({
+        "total_sources": len(sources),
+        "files_written": [str(output_dir / f) for f in files.keys()],
+        "preview_urls": [s["url"] for s in sources[:10]],
+    })
 
 
 # ============================================================

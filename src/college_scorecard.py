@@ -18,6 +18,7 @@ from typing import Any
 import requests
 
 from . import cache
+from .source_tracker import record_source
 
 BASE_URL = "https://api.data.gov/ed/collegescorecard/v1/schools.json"
 
@@ -45,11 +46,14 @@ DEFAULT_FIELDS = [
 
 @dataclass
 class CollegeScorecardClient:
-    api_key: str = field(default_factory=lambda: os.environ.get("COLLEGE_SCORECARD_API_KEY", ""))
+    api_key: str = ""
     session: requests.Session = field(default_factory=requests.Session)
     delay_seconds: float = 0.3
 
     def __post_init__(self) -> None:
+        # If no explicit key provided, try environment variable
+        if not self.api_key:
+            self.api_key = os.environ.get("COLLEGE_SCORECARD_API_KEY", "")
         if not self.api_key:
             raise ValueError(
                 "COLLEGE_SCORECARD_API_KEY não encontrada. "
@@ -85,6 +89,18 @@ class CollegeScorecardClient:
             results = resp.json().get("results", [])
         except (ValueError, KeyError):
             raise RuntimeError("College Scorecard API: resposta JSON inválida")
+
+        # Track source for each school found
+        for school in results:
+            school_name = school.get("school.name")
+            if school_name:
+                record_source(
+                    url="https://collegescorecard.ed.gov/",
+                    title=f"College Scorecard - {school_name}",
+                    university=school_name,
+                    category="institutional_data"
+                )
+
         cache.put("scorecard", cache_key, results)
         return results
 

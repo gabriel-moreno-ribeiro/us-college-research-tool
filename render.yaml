@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: us-college-research-mcp
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m mcp_server
+    healthCheckPath: /health
+    envVars:
+      - key: MCP_TRANSPORT
+        value: http
+      - key: PYTHON_VERSION
+        value: "3.13"
+    plan: free
