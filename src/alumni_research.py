@@ -85,13 +85,13 @@ def generate_alumni_queries(
         queries.append(AlumniQuery(
             university_linkedin_slug=slug,
             field_of_study=field_of_study,
-            label=f"Todos alumni de {field_of_study}",
+            label=f"All {field_of_study} alumni",
         ))
 
     # 2. Por empresa (big tech + startups + consulting + VCs)
     company_groups = [
         ("Big Tech", config.get("big_tech", [])),
-        ("Startups & Aceleradoras", config.get("startups_accelerators", [])),
+        ("Startups & Accelerators", config.get("startups_accelerators", [])),
         ("Consulting & Finance", config.get("consulting_finance", [])),
         ("Venture Capital", config.get("vc_funds", [])),
     ]
@@ -110,7 +110,7 @@ def generate_alumni_queries(
             university_linkedin_slug=slug,
             field_of_study=field_of_study,
             keywords=role,
-            label=f"Cargo: {role}",
+            label=f"Role: {role}",
         ))
 
     # 4. Por localização
@@ -119,7 +119,7 @@ def generate_alumni_queries(
             university_linkedin_slug=slug,
             field_of_study=field_of_study,
             location=location,
-            label=f"Localização: {location}",
+            label=f"Location: {location}",
         ))
 
     return queries
@@ -127,7 +127,7 @@ def generate_alumni_queries(
 
 def format_alumni_links(queries: list[AlumniQuery]) -> str:
     """Formata os links agrupados por categoria."""
-    lines = ["### Links para pesquisa manual de alumni (LinkedIn Alumni Tool)", ""]
+    lines = ["### Alumni Research Links (LinkedIn Alumni Tool)", ""]
 
     current_category = None
     for q in queries:
@@ -135,14 +135,14 @@ def format_alumni_links(queries: list[AlumniQuery]) -> str:
 
         if "→" in label:
             category = label.split("→")[0].strip()
-        elif label.startswith("Cargo:"):
-            category = "Por cargo / senioridade"
-        elif label.startswith("Localização:"):
-            category = "Por localização"
-        elif label.startswith("Todos"):
-            category = "Geral"
+        elif label.startswith("Role:"):
+            category = "By Role / Seniority"
+        elif label.startswith("Location:"):
+            category = "By Location"
+        elif label.startswith("All"):
+            category = "General"
         else:
-            category = "Outros"
+            category = "Other"
 
         if category != current_category:
             if current_category is not None:
@@ -156,13 +156,13 @@ def format_alumni_links(queries: list[AlumniQuery]) -> str:
 
     lines.append("")
     lines.append(
-        "> Confira se o slug da universidade está correto abrindo o primeiro link — se "
-        "não encontrar a página, pesquise a universidade direto no LinkedIn e copie a "
-        "URL real que aparece em '/school/.../'."
+        "> Verify the university slug is correct by opening the first link. If the page "
+        "is not found, search the university on LinkedIn and copy the real URL from "
+        "'/school/.../'."
     )
     lines.append(">")
     lines.append(
-        "> Empresas e cargos-alvo são configuráveis em `data/target_companies.json`."
+        "> Target companies and roles are configurable in `data/target_companies.json`."
     )
     return "\n".join(lines)
 

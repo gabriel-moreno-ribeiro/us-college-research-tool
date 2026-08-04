@@ -1660,6 +1660,25 @@ def get_program_curriculum(
 
 
 @mcp.tool(annotations=ToolAnnotations(read_only_hint=True))
+def get_campus_life(
+    university_name: Annotated[str, Field(description="Full university name")],
+    country: Annotated[str | None, Field(description="Student's country for contextual notes (e.g. climate comparison)")] = None,
+) -> dict[str, Any]:
+    """Get practical campus life data: climate, location, housing, cost of living, and safety.
+
+    For configured universities, returns pre-populated data with specific notes
+    for international students (e.g., winter gear budget for tropical-climate students).
+
+    Includes: distance to airport, transit options, freshman housing guarantee,
+    room and board costs, monthly living expenses, Clery Act safety report link.
+
+    This is practical decision-making data that complements academic metrics."""
+    from src.campus_life import build_campus_life_response
+    result = build_campus_life_response(university_name, country)
+    return _ok_response(result)
+
+
+@mcp.tool(annotations=ToolAnnotations(read_only_hint=True))
 def get_country_community(
     university_name: Annotated[str, Field(description="Full university name")],
     country: Annotated[str, Field(description="Country name (e.g. 'Brazil', 'India', 'China')")] = "Brazil",
