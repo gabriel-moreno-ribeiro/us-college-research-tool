@@ -132,7 +132,7 @@ Ferramenta de pesquisa profunda sobre universidades dos EUA, voltada para quem e
 ## Universidades configuradas
 
 - **Northwestern University** — McCormick School of Engineering (CS/ECE)
-  - Faculty config: `northwestern_cs`
+  - Faculty configs: `northwestern_cs`, `northwestern_ece`
   - Career outcomes: Beyond Northwestern Class of 2025 (NCA)
   - Oportunidades: The Garage, Farley Center, VentureCat, WildHacks, SURG/AYURG/URAP, clubes
 

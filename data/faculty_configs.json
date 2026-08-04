@@ -19,6 +19,24 @@
     "notes": "McCormick School of Engineering - CS dept. ~87 faculty members. Listing page has NO research_area — that field is only on the individual profile page. Use fetch_profiles=True to enrich."
   },
 
+  "northwestern_ece": {
+    "university": "Northwestern University",
+    "department": "Electrical and Computer Engineering",
+    "url": "https://www.mccormick.northwestern.edu/electrical-computer/people/faculty.html",
+    "selectors": {
+      "card": "div.faculty.cf",
+      "name": ".faculty-info h3 a",
+      "title": ".faculty-info p:first-of-type",
+      "research_areas": "",
+      "email": ".faculty-info a.mail_link",
+      "profile_link": ".faculty-info h3 a"
+    },
+    "profile_selectors": {
+      "_comment": "Same structure as CS — McCormick uses identical templates across departments."
+    },
+    "notes": "McCormick School of Engineering - ECE dept. Covers both EE and CompE faculty. Same page structure as CS. Use fetch_profiles=True to get research interests from individual profile pages."
+  },
+
   "example_university_cs_dept": {
     "university": "Example University",
     "department": "Computer Science",

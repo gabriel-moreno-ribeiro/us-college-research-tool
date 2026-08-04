@@ -95,10 +95,32 @@ def _try_orcid(
     profile = orcid.find_professor(name, affiliation)
     if not profile:
         return None
+
+    # Validate affiliation match — prevents false positives from homonyms
+    aff_lower = affiliation.lower()
+    aff_words = set(aff_lower.split())
+    profile_affs_text = " ".join(profile.affiliations).lower()
+    if aff_lower in profile_affs_text:
+        confidence = "high"
+        warning = None
+    elif aff_words & set(profile_affs_text.split()):
+        confidence = "medium"
+        warning = (
+            f"ORCID profile found but affiliation doesn't exactly match "
+            f"'{affiliation}'. Listed affiliations: {'; '.join(profile.affiliations[:3])}. "
+            "May be a homonym — verify manually."
+        )
+    else:
+        confidence = "low"
+        warning = (
+            f"ORCID returned a result for '{name}' but affiliations "
+            f"({'; '.join(profile.affiliations[:3]) or 'none listed'}) do NOT match "
+            f"'{affiliation}'. Likely a different person. DO NOT USE without verification."
+        )
+
     pubs: list[Publication] = []
     for work in profile.works[:8]:
         pub = Publication(title=work.title, year=work.year, doi=work.doi)
-        # Enrich with Semantic Scholar citation data via DOI when available
         if work.doi:
             try:
                 paper = ss.get_paper_by_doi(work.doi)
@@ -112,12 +134,13 @@ def _try_orcid(
         professor_name=name,
         identified_as=profile.name or name,
         source="orcid",
-        confidence="high",
+        confidence=confidence,
         profile_url=f"https://orcid.org/{profile.orcid_id}",
         affiliation="; ".join(profile.affiliations[:3]) or None,
         publications=pubs,
         h_index=None,
         total_works=len(profile.works),
+        warning=warning,
     )
 
 

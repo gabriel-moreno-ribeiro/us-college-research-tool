@@ -1481,12 +1481,18 @@ def record_sources(
     sources: Annotated[list[dict[str, str]], Field(
         description="List of sources to record. Each: {url, title?, university?, category?, notes?}"
     )],
+    university: Annotated[str | None, Field(
+        description="University name to tag ALL sources with (saves repeating it per item)"
+    )] = None,
 ) -> dict[str, Any]:
     """Record URLs consulted during research for NotebookLM export.
 
     Call this to register any URL the model fetched via web search (Exa, Firecrawl)
     that wasn't automatically tracked by other tools. This ensures export_sources
     captures everything consulted during the session.
+
+    TIP: Pass the university parameter once to tag all URLs, instead of repeating
+    it in each source dict. Per-item university overrides the top-level one.
 
     Categories: 'scorecard', 'faculty', 'orcid', 'semantic_scholar', 'opportunities',
     'career_outcomes', 'alumni', 'alumni_linkedin_tool', 'rankings', 'admissions',
@@ -1500,7 +1506,7 @@ def record_sources(
             continue
         record_source(
             url=url,
-            university=s.get("university"),
+            university=s.get("university") or university,
             title=s.get("title"),
             category=s.get("category", "web_search"),
         )

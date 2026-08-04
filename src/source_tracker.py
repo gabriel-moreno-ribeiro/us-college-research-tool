@@ -72,12 +72,16 @@ def get_sources(
     category: str | None = None,
     official_only: bool = False,
 ) -> list[dict[str, Any]]:
-    """Query recorded sources with optional filters."""
+    """Query recorded sources with optional filters.
+
+    When university is specified, also returns sources recorded without a university
+    (NULL), since they were likely recorded in the same research session.
+    """
     conn = _get_conn()
     query = "SELECT url, title, university, category, consulted_at, is_official_domain FROM sources WHERE 1=1"
     params: list[Any] = []
     if university:
-        query += " AND university = ?"
+        query += " AND (university = ? OR university IS NULL)"
         params.append(university)
     if category:
         query += " AND category = ?"
