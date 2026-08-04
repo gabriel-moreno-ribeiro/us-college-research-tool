@@ -37,8 +37,11 @@ Ferramenta de pesquisa profunda sobre universidades dos EUA, voltada para quem e
 | `src/alumni_research.py` | URLs filtradas do LinkedIn Alumni Tool |
 | `src/comparativo.py` | Tabela comparativa para modo batch |
 | `src/cache.py` | Cache SQLite com TTL configurável por fonte |
+| `src/international_data.py` | Dados para candidatos internacionais (admissão, idioma, visto) |
+| `src/rankings.py` | Rankings universitários (THE, QS, US News, ARWU, CSRankings) |
+| `src/country_community.py` | Comunidade do país de origem (BRASA, orgs, alumni) |
 
-## MCP Tools (16)
+## MCP Tools (23)
 
 ### Discovery
 - `search_university` — busca no College Scorecard, retorna candidatos com coverage info
@@ -49,6 +52,13 @@ Ferramenta de pesquisa profunda sobre universidades dos EUA, voltada para quem e
 - `get_opportunities` — oportunidades curadas
 - `get_alumni_research_links` — URLs do LinkedIn Alumni Tool
 - `get_career_outcomes` — dados de carreira pós-graduação
+
+### International Applicants (NOVO)
+- `get_international_admissions` — taxa internacional, need-blind/aware, aid policy, contatos
+- `get_english_requirements` — TOEFL, IELTS, DET, Cambridge, PTE, waivers, SAT/ACT policy
+- `get_visa_and_founder_pathways` — F-1, CPT, OPT/STEM, empresa em F-1, EIN, caminhos pós-grad
+- `get_rankings` — THE, QS, US News, ARWU, CSRankings (geral + por subject)
+- `get_country_community` — BRASA, orgs estudantis, alumni no país, bolsas, admission officers
 
 ### Faculty & Research
 - `list_faculty` — paginada (default 20, max 50)
@@ -61,12 +71,15 @@ Ferramenta de pesquisa profunda sobre universidades dos EUA, voltada para quem e
 
 ### Alumni & Sources
 - `search_alumni_web` — busca web por dados públicos de alumni + gera links LinkedIn
+- `record_sources` — registra URLs manualmente para NotebookLM export
 - `export_sources` — exporta URLs consultadas para NotebookLM
 
 ### Scaling
 - `draft_faculty_config` — propõe seletores CSS de uma URL
 - `validate_faculty_config` — testa config existente
-- `draft_opportunities` — propõe oportunidades a partir de web content (com source_url + extraction_basis)
+- `save_faculty_config` — salva config aprovada em faculty_configs.json
+- `draft_opportunities` — propõe oportunidades a partir de web content
+- `save_opportunities` — salva oportunidades aprovadas em opportunities.json
 
 ### Resources (3)
 - `config://faculty-departments` — configs de faculty

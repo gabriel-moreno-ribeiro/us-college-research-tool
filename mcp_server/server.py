@@ -253,8 +253,12 @@ def list_configured_departments() -> dict[str, Any]:
     configs = load_configs()
     departments = []
     for key, cfg in configs.items():
+        if not isinstance(cfg, dict):
+            continue
         departments.append({
             "config_key": key,
+            "university": cfg.get("university", ""),
+            "department": cfg.get("department", ""),
             "url": cfg.get("url", ""),
             "selectors_preview": list(cfg.get("selectors", {}).keys()),
         })
@@ -1037,6 +1041,92 @@ def validate_faculty_config(
 
 
 @mcp.tool()
+def save_faculty_config(
+    config_key: Annotated[str, Field(description="Unique key for this config (e.g. 'northwestern_ece')")],
+    university: Annotated[str, Field(description="Full university name")],
+    department: Annotated[str, Field(description="Department name (e.g. 'Electrical and Computer Engineering')")],
+    url: Annotated[str, Field(description="Faculty listing page URL")],
+    selectors: Annotated[dict[str, str], Field(description="CSS selectors dict from draft_faculty_config (card, name, title, etc.)")],
+    overwrite: Annotated[bool, Field(description="If true, overwrite existing config with same key")] = False,
+) -> dict[str, Any]:
+    """Save a faculty config to data/faculty_configs.json.
+
+    Use AFTER draft_faculty_config has proposed selectors AND the user has approved.
+    Never save without explicit user approval — the user must review the sample
+    extraction first."""
+
+    configs = load_configs() if FACULTY_CONFIGS_PATH.exists() else {}
+    if config_key in configs and not overwrite:
+        if isinstance(configs[config_key], dict):
+            return _error_response(
+                STATUS_AMBIGUOUS,
+                f"Config key '{config_key}' already exists. Set overwrite=True to replace it, "
+                "or choose a different key.",
+                existing_url=configs[config_key].get("url", ""),
+            )
+
+    configs[config_key] = {
+        "university": university,
+        "department": department,
+        "url": url,
+        "selectors": selectors,
+    }
+
+    with open(FACULTY_CONFIGS_PATH, "w", encoding="utf-8") as f:
+        json.dump(configs, f, indent=2, ensure_ascii=False)
+
+    return _ok_response(
+        {"config_key": config_key, "saved": True},
+        note=f"Config saved. Test it with validate_faculty_config('{config_key}').",
+    )
+
+
+@mcp.tool()
+def save_opportunities(
+    university_name: Annotated[str, Field(description="University name exactly as in search_university")],
+    opportunities: Annotated[dict[str, list[dict[str, str]]], Field(
+        description="Opportunities grouped by category, same schema as draft_opportunities output. "
+                    "Each item: {name, description, source_url, extraction_basis}"
+    )],
+    merge: Annotated[bool, Field(description="If true, merge with existing opportunities (add new, keep old). If false, replace entirely.")] = True,
+) -> dict[str, Any]:
+    """Save curated opportunities to data/opportunities.json.
+
+    Use AFTER draft_opportunities has proposed items AND the user has approved.
+    Never save without explicit user approval."""
+
+    opps_path = DATA_DIR / "opportunities.json"
+    existing = {}
+    if opps_path.exists():
+        with open(opps_path, encoding="utf-8") as f:
+            existing = json.load(f)
+
+    slug = university_name.strip().lower().replace(" ", "_").replace(",", "")
+
+    if merge and slug in existing:
+        existing_opps = existing[slug]
+        for category, items in opportunities.items():
+            if category not in existing_opps:
+                existing_opps[category] = []
+            existing_names = {i.get("name") for i in existing_opps[category]}
+            for item in items:
+                if item.get("name") not in existing_names:
+                    existing_opps[category].append(item)
+        existing[slug] = existing_opps
+    else:
+        existing[slug] = opportunities
+
+    with open(opps_path, "w", encoding="utf-8") as f:
+        json.dump(existing, f, indent=2, ensure_ascii=False)
+
+    total_items = sum(len(v) for v in existing[slug].values())
+    return _ok_response(
+        {"university_slug": slug, "saved": True, "total_items": total_items},
+        note="Opportunities saved. Verify with get_opportunities.",
+    )
+
+
+@mcp.tool()
 def draft_opportunities(
     university_name: Annotated[str, Field(description="University name (e.g. 'Carnegie Mellon University')")],
     web_content: Annotated[list[dict[str, str]], Field(
@@ -1343,6 +1433,39 @@ def search_alumni_web(
     )
 
 
+@mcp.tool()
+def record_sources(
+    sources: Annotated[list[dict[str, str]], Field(
+        description="List of sources to record. Each: {url, title?, university?, category?, notes?}"
+    )],
+) -> dict[str, Any]:
+    """Record URLs consulted during research for NotebookLM export.
+
+    Call this to register any URL the model fetched via web search (Exa, Firecrawl)
+    that wasn't automatically tracked by other tools. This ensures export_sources
+    captures everything consulted during the session.
+
+    Categories: 'scorecard', 'faculty', 'orcid', 'semantic_scholar', 'opportunities',
+    'career_outcomes', 'alumni', 'alumni_linkedin_tool', 'rankings', 'admissions',
+    'web_search', 'official_page', 'news', 'other'"""
+    from src.source_tracker import record_source
+
+    recorded = 0
+    for s in sources:
+        url = s.get("url", "").strip()
+        if not url:
+            continue
+        record_source(
+            url=url,
+            university=s.get("university"),
+            title=s.get("title"),
+            category=s.get("category", "web_search"),
+        )
+        recorded += 1
+
+    return _ok_response({"recorded": recorded, "total_submitted": len(sources)})
+
+
 @mcp.tool(annotations=ToolAnnotations(read_only_hint=True))
 def export_sources(
     university: Annotated[str | None, Field(description="Filter by university name")] = None,
@@ -1376,6 +1499,112 @@ def export_sources(
 
 
 # ============================================================
+# INTERNATIONAL APPLICANT TOOLS
+# ============================================================
+
+@mcp.tool(annotations=ToolAnnotations(read_only_hint=True))
+def get_international_admissions(
+    university_name: Annotated[str, Field(description="Full university name")],
+    applicant_country: Annotated[str | None, Field(description="Applicant's country (e.g. 'Brazil') for country-specific data")] = None,
+) -> dict[str, Any]:
+    """Get international admissions data: acceptance rates, aid policy, need-blind status,
+    document requirements, and contact information.
+
+    Returns known curated data (high confidence) plus search queries for the model to
+    execute via web search to find additional data points. Every number includes provenance
+    (source_url, source_type, confidence).
+
+    CRITICAL fields for international applicants:
+    - need_blind_international: whether financial need affects admission
+    - aid_first_year_only: if true, student CANNOT apply for aid after freshman year
+    - css_profile_code: required for financial aid application
+
+    This tool may return partial data with search queries to complete. Execute the
+    queries and fill in the expected_fields structure."""
+    from src.international_data import build_international_admissions_response
+    result = build_international_admissions_response(university_name, applicant_country)
+    return _ok_response(result)
+
+
+@mcp.tool(annotations=ToolAnnotations(read_only_hint=True))
+def get_english_requirements(
+    university_name: Annotated[str, Field(description="Full university name")],
+    program: Annotated[str | None, Field(description="Specific program (some have higher requirements)")] = None,
+) -> dict[str, Any]:
+    """Get English proficiency requirements: TOEFL, IELTS, Duolingo, Cambridge, PTE minimums,
+    waiver conditions, and SAT/ACT test-optional policy.
+
+    Returns a structured template with search queries. Execute the queries to fill in
+    current requirements from the university's admissions page.
+
+    Also includes SAT/ACT policy status (test-optional changes year to year)."""
+    from src.international_data import build_english_requirements_response
+    result = build_english_requirements_response(university_name, program)
+    return _ok_response(result)
+
+
+@mcp.tool(annotations=ToolAnnotations(read_only_hint=True))
+def get_visa_and_founder_pathways(
+    university_name: Annotated[str, Field(description="Full university name")],
+) -> dict[str, Any]:
+    """Get visa information and entrepreneurship pathways for international students.
+
+    Covers: F-1 rules, CPT, OPT/STEM OPT, company ownership while on F-1,
+    EIN requirements for competition prizes, university legal resources for
+    founders, and post-graduation visa paths (H-1B, O-1, IER).
+
+    General F-1/visa info is pre-populated (from USCIS guidance). University-specific
+    resources (legal clinics, international entrepreneur programs) require web search.
+
+    DISCLAIMER: Not legal advice. Rules change. Consult DSO and immigration attorney."""
+    from src.international_data import build_visa_pathways_response
+    result = build_visa_pathways_response(university_name)
+    return _ok_response(result)
+
+
+@mcp.tool(annotations=ToolAnnotations(read_only_hint=True))
+def get_rankings(
+    university_name: Annotated[str, Field(description="Full university name")],
+    subject: Annotated[str | None, Field(description="Subject area (e.g. 'Electrical and Electronic Engineering', 'Computer Science')")] = None,
+) -> dict[str, Any]:
+    """Get university rankings from THE, QS, US News, ARWU, and CSRankings.
+
+    Returns BOTH overall AND subject-specific rankings when available.
+    Subject rankings are more relevant for program-level decisions.
+
+    Since ranking sites often block scraping, returns search queries for the
+    model to execute. Each ranking includes methodology summary so the user
+    understands why numbers differ between sources.
+
+    NEVER fabricates ranking numbers. Returns UNAVAILABLE with manual_url
+    when data cannot be confirmed."""
+    from src.rankings import build_rankings_response
+    result = build_rankings_response(university_name, subject)
+    return _ok_response(result)
+
+
+@mcp.tool(annotations=ToolAnnotations(read_only_hint=True))
+def get_country_community(
+    university_name: Annotated[str, Field(description="Full university name")],
+    country: Annotated[str, Field(description="Country name (e.g. 'Brazil', 'India', 'China')")] = "Brazil",
+) -> dict[str, Any]:
+    """Find country-specific student communities, alumni chapters, and resources.
+
+    For Brazilian applicants, includes pre-populated data on BRASA chapters,
+    Fundacao Estudar/Lemann, EducationUSA, and Fulbright Brasil.
+
+    Returns search queries to find:
+    - Student organizations from that country on campus
+    - Alumni chapters in the home country
+    - Regional admission officer for that region
+    - Scholarship programs specific to that nationality
+    - Recruitment events in that country"""
+    from src.country_community import build_country_community_response
+    result = build_country_community_response(university_name, country)
+    return _ok_response(result)
+
+
+# ============================================================
 # RESOURCES
 # ============================================================
 
@@ -1386,7 +1615,7 @@ def resource_faculty_departments() -> str:
         return json.dumps({"configured": []})
     configs = load_configs()
     return json.dumps(
-        {"configured": [{"key": k, "url": v.get("url", "")} for k, v in configs.items()]},
+        {"configured": [{"key": k, "url": v.get("url", "")} for k, v in configs.items() if isinstance(v, dict)]},
         indent=2,
     )
 
