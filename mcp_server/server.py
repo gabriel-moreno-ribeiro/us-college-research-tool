@@ -797,6 +797,31 @@ def generate_full_report(
     return _ok_response(result)
 
 
+@mcp.tool()
+def generate_html_report(
+    report_data: Annotated[dict[str, Any], Field(description="Structured report data from research. Keys: university, overview, rankings, international, english_requirements, faculty, opportunities, career_outcomes, alumni, community, visa_pathways, application, sources, contacts")],
+    language: Annotated[str, Field(description="Output language: 'en' or 'pt-BR'")] = "en",
+) -> dict[str, Any]:
+    """Generate a self-contained HTML report with inline SVG charts from structured data.
+
+    Produces four files:
+    - report.html: Single HTML file, no external deps, print-friendly
+    - report_data.json: Raw structured data (source of truth for numbers)
+    - sources.txt: One URL per line (for NotebookLM bulk import)
+    - contacts.csv: All people found (name, role, email, LinkedIn, ORCID, priority)
+
+    The model should gather all data first using individual tools, structure it
+    into the report_data format, then call this tool to render the final output.
+
+    Charts generated as inline SVG: net price by income, rankings, deadlines, etc."""
+    from src.html_report import generate_html_report as _gen
+    try:
+        files = _gen(report_data, language=language)
+        return _ok_response(files, note="HTML report generated. Open report.html in browser or print to PDF.")
+    except Exception as e:
+        return _error_response(STATUS_UPSTREAM_ERROR, f"HTML generation failed: {e}")
+
+
 @mcp.tool(
     annotations=ToolAnnotations(read_only_hint=True),
 )
