@@ -41,7 +41,7 @@ Ferramenta de pesquisa profunda sobre universidades dos EUA, voltada para quem e
 | `src/rankings.py` | Rankings universitários (THE, QS, US News, ARWU, CSRankings) |
 | `src/country_community.py` | Comunidade do país de origem (BRASA, orgs, alumni) |
 
-## MCP Tools (23)
+## MCP Tools (28)
 
 ### Discovery
 - `search_university` — busca no College Scorecard, retorna candidatos com coverage info
@@ -53,12 +53,15 @@ Ferramenta de pesquisa profunda sobre universidades dos EUA, voltada para quem e
 - `get_alumni_research_links` — URLs do LinkedIn Alumni Tool
 - `get_career_outcomes` — dados de carreira pós-graduação
 
-### International Applicants (NOVO)
+### International Applicants
 - `get_international_admissions` — taxa internacional, need-blind/aware, aid policy, contatos
 - `get_english_requirements` — TOEFL, IELTS, DET, Cambridge, PTE, waivers, SAT/ACT policy
 - `get_visa_and_founder_pathways` — F-1, CPT, OPT/STEM, empresa em F-1, EIN, caminhos pós-grad
 - `get_rankings` — THE, QS, US News, ARWU, CSRankings (geral + por subject)
 - `get_country_community` — BRASA, orgs estudantis, alumni no país, bolsas, admission officers
+- `get_application_requirements` — deadlines, essays, recomendações, entrevista, fee waiver
+- `get_program_curriculum` — requisitos do major, créditos, capstone, minors, dual degree
+- `get_campus_life` — clima, localização, housing, custo de vida, segurança
 
 ### Faculty & Research
 - `list_faculty` — paginada (default 20, max 50)
@@ -66,7 +69,8 @@ Ferramenta de pesquisa profunda sobre universidades dos EUA, voltada para quem e
 - `match_professors_to_interests` — ranking por relevância
 
 ### Consolidation
-- `generate_full_report` — relatório completo (aceita `return_content=false`)
+- `generate_full_report` — relatório Markdown completo (aceita `return_content=false`)
+- `generate_html_report` — relatório HTML autocontido com SVG charts + contacts.csv + sources.txt
 - `compare_universities` — comparativo
 
 ### Alumni & Sources
