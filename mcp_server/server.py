@@ -340,19 +340,37 @@ def get_university_overview(
         "state": school.get("school.state"),
         "website": school.get("school.school_url"),
         "scorecard_id": school.get("id"),
+        "data_lag_warning": "College Scorecard data has a 2-3 year lag. Check reference_year on each metric.",
         "metrics": {
             "admission_rate": _field("latest.admissions.admission_rate.overall", "Overall admission rate"),
             "sat_average": _field("latest.admissions.sat_scores.average.overall", "Average SAT score"),
+            "sat_reading_25th": _field("latest.admissions.sat_scores.25th_percentile.critical_reading", "SAT Reading 25th percentile"),
+            "sat_reading_75th": _field("latest.admissions.sat_scores.75th_percentile.critical_reading", "SAT Reading 75th percentile"),
+            "sat_math_25th": _field("latest.admissions.sat_scores.25th_percentile.math", "SAT Math 25th percentile"),
+            "sat_math_75th": _field("latest.admissions.sat_scores.75th_percentile.math", "SAT Math 75th percentile"),
             "act_midpoint": _field("latest.admissions.act_scores.midpoint.cumulative", "ACT midpoint (cumulative)"),
+            "act_25th": _field("latest.admissions.act_scores.25th_percentile.cumulative", "ACT 25th percentile"),
+            "act_75th": _field("latest.admissions.act_scores.75th_percentile.cumulative", "ACT 75th percentile"),
             "tuition_in_state": _field("latest.cost.tuition.in_state", "Tuition (in-state)"),
             "tuition_out_of_state": _field("latest.cost.tuition.out_of_state", "Tuition (out-of-state, sticker price)"),
             "avg_net_price": _field("latest.cost.avg_net_price.overall", "Average net price (after financial aid)"),
+            "net_price_0_30k": _field("latest.cost.net_price.consumer.by_income_level.0-30000", "Net price: family income $0-$30k"),
+            "net_price_30_48k": _field("latest.cost.net_price.consumer.by_income_level.30001-48000", "Net price: family income $30k-$48k"),
+            "net_price_48_75k": _field("latest.cost.net_price.consumer.by_income_level.48001-75000", "Net price: family income $48k-$75k"),
+            "net_price_75_110k": _field("latest.cost.net_price.consumer.by_income_level.75001-110000", "Net price: family income $75k-$110k"),
+            "net_price_110k_plus": _field("latest.cost.net_price.consumer.by_income_level.110001-plus", "Net price: family income $110k+"),
+            "international_share": _field("latest.student.demographics.non_resident_alien_share", "International student share (non-resident aliens)"),
             "student_size": _field("latest.student.size", "Undergraduate enrollment"),
             "completion_rate_4yr": _field("latest.completion.completion_rate_4yr_150nt", "4-year completion rate (150% time)"),
             "earnings_10yr": _field("latest.earnings.10_yrs_after_entry.median", "Median earnings 10 years after entry"),
             "earnings_6yr": _field("latest.earnings.6_yrs_after_entry.median", "Median earnings 6 years after entry"),
             "median_debt": _field("latest.aid.median_debt.completers.overall", "Median debt at completion"),
+            "pell_grant_rate": _field("latest.aid.pell_grant_rate", "Share of students receiving Pell Grants (low-income indicator)"),
         },
+        "net_price_note": "The AVERAGE net price misleads because it mixes full-pay families with aid recipients. "
+                          "Always present net price BY INCOME BRACKET for accurate cost picture. "
+                          "International students: net price brackets only reflect domestic students with aid. "
+                          "International aid availability varies — check get_international_admissions.",
     }
 
     cache_info = _cache_meta("scorecard", f"search:{university_name.lower().strip()}")
@@ -1580,6 +1598,39 @@ def get_rankings(
     when data cannot be confirmed."""
     from src.rankings import build_rankings_response
     result = build_rankings_response(university_name, subject)
+    return _ok_response(result)
+
+
+@mcp.tool(annotations=ToolAnnotations(read_only_hint=True))
+def get_application_requirements(
+    university_name: Annotated[str, Field(description="Full university name")],
+) -> dict[str, Any]:
+    """Get application requirements and deadlines for undergraduate admission.
+
+    Returns structured template with search queries for: application platform,
+    all deadlines (ED/EA/RD/aid), supplemental essay prompts, recommendation
+    requirements, interview policy, fee waivers, and ED advantage stats.
+
+    Essay prompts change yearly — verify they're for the current admission cycle.
+    Deadlines for international financial aid are often EARLIER than domestic."""
+    from src.application_requirements import build_application_requirements_response
+    result = build_application_requirements_response(university_name)
+    return _ok_response(result)
+
+
+@mcp.tool(annotations=ToolAnnotations(read_only_hint=True))
+def get_program_curriculum(
+    university_name: Annotated[str, Field(description="Full university name")],
+    program_name: Annotated[str, Field(description="Program name (e.g. 'Electrical and Computer Engineering')")],
+) -> dict[str, Any]:
+    """Get program curriculum details: requirements, credits, course sequence,
+    capstone project, dual degree options, compatible minors, and study abroad.
+
+    Key question this answers: "Can I fit an entrepreneurship minor without
+    extending graduation?" — requires knowing credit counts, double-counting
+    rules, and declaration deadlines."""
+    from src.application_requirements import build_curriculum_response
+    result = build_curriculum_response(university_name, program_name)
     return _ok_response(result)
 
 
