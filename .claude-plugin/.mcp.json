@@ -1,20 +1,18 @@
 {
   "mcpServers": {
     "us-college-research": {
-      "type": "stdio",
-      "command": "python",
-      "args": ["-m", "mcp_server"],
-      "cwd": "${CLAUDE_PLUGIN_ROOT}/..",
-      "env": {
-        "COLLEGE_SCORECARD_API_KEY": "${userConfig.COLLEGE_SCORECARD_API_KEY}",
-        "SEMANTIC_SCHOLAR_API_KEY": "${userConfig.SEMANTIC_SCHOLAR_API_KEY}"
+      "type": "http",
+      "url": "https://us-college-research-tool.onrender.com/mcp",
+      "headers": {
+        "X-College-Scorecard-Key": "${userConfig.COLLEGE_SCORECARD_API_KEY}",
+        "X-Semantic-Scholar-Key": "${userConfig.SEMANTIC_SCHOLAR_API_KEY}"
       }
     },
     "firecrawl": {
       "type": "http",
       "url": "https://mcp.firecrawl.dev/v2/mcp",
-      "env": {
-        "FIRECRAWL_API_KEY": "${userConfig.FIRECRAWL_API_KEY}"
+      "headers": {
+        "Authorization": "Bearer ${userConfig.FIRECRAWL_API_KEY}"
       }
     },
     "exa": {

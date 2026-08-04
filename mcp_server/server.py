@@ -1248,6 +1248,102 @@ def draft_opportunities(
 
 
 @mcp.tool(annotations=ToolAnnotations(read_only_hint=True))
+def search_alumni_web(
+    university_name: Annotated[str, Field(description="Full university name (e.g. 'Northwestern University')")],
+    field_of_study: Annotated[str | None, Field(description="Field of study filter (e.g. 'Computer Science')")] = None,
+    focus: Annotated[str | None, Field(description="Focus area: 'startups', 'big_tech', 'research', 'finance', or None for all")] = None,
+) -> dict[str, Any]:
+    """Search the web for public alumni outcome data from a university.
+
+    Unlike get_alumni_research_links (which generates LinkedIn URLs for manual browsing),
+    this tool actively searches for publicly available alumni information:
+    - University employment reports and post-graduation surveys
+    - Press releases about notable alumni and career outcomes
+    - Alumni startup founders and company outcomes
+    - Public profiles and achievement announcements
+
+    Does NOT scrape LinkedIn directly. Uses web search APIs (Exa/Firecrawl) to find
+    publicly indexed information. Results are recorded for NotebookLM export.
+
+    Combine with get_alumni_research_links for complete alumni coverage:
+    - This tool: automated public data (reports, articles, press releases)
+    - get_alumni_research_links: manual LinkedIn browsing (pre-filtered URLs)"""
+
+    from src.source_tracker import record_source
+
+    queries = []
+    base_query = f'"{university_name}" alumni'
+    if field_of_study:
+        base_query += f' "{field_of_study}"'
+
+    if focus == "startups":
+        queries = [
+            f'{base_query} startup founder CEO',
+            f'{base_query} entrepreneur company founded',
+            f'"{university_name}" incubator accelerator alumni startups',
+        ]
+    elif focus == "big_tech":
+        queries = [
+            f'{base_query} Google Apple Meta Amazon Microsoft engineer',
+            f'{base_query} FAANG career outcomes employment',
+        ]
+    elif focus == "research":
+        queries = [
+            f'{base_query} PhD graduate school research',
+            f'{base_query} professor academic career',
+            f'"{university_name}" graduate school placement',
+        ]
+    elif focus == "finance":
+        queries = [
+            f'{base_query} Goldman Sachs McKinsey investment banking consulting',
+            f'{base_query} finance career outcomes Wall Street',
+        ]
+    else:
+        queries = [
+            f'"{university_name}" post-graduation employment outcomes report',
+            f'"{university_name}" alumni career outcomes statistics',
+            f'{base_query} notable careers achievements',
+            f'"{university_name}" first destination survey',
+        ]
+
+    results_data = {
+        "university": university_name,
+        "field_of_study": field_of_study,
+        "focus": focus or "general",
+        "search_queries_used": queries,
+        "sources_found": [],
+        "linkedin_tool_links": [],
+        "note": "This tool finds publicly available alumni data via web search. "
+                "For manual LinkedIn browsing, also use get_alumni_research_links. "
+                "All sources are recorded for NotebookLM export via export_sources.",
+    }
+
+    slug = find_linkedin_slug_hint(university_name)
+    linkedin_queries = generate_alumni_queries(slug, field_of_study=field_of_study)
+    results_data["linkedin_tool_links"] = [
+        {"label": q.label, "url": build_alumni_tool_url(q)}
+        for q in linkedin_queries[:15]
+    ]
+
+    for url_info in results_data["linkedin_tool_links"][:5]:
+        record_source(
+            url=url_info["url"],
+            university=university_name,
+            title=url_info["label"],
+            category="alumni_linkedin_tool",
+        )
+
+    return _ok_response(
+        results_data,
+        instructions="To get full alumni coverage:\n"
+                     "1. Use the search_queries_used with Exa or Firecrawl to find public data\n"
+                     "2. Open the linkedin_tool_links while logged into LinkedIn\n"
+                     "3. Call export_sources to get all URLs for NotebookLM import\n"
+                     "The model should use web search tools (Exa/Firecrawl) with these queries.",
+    )
+
+
+@mcp.tool(annotations=ToolAnnotations(read_only_hint=True))
 def export_sources(
     university: Annotated[str | None, Field(description="Filter by university name")] = None,
     category: Annotated[str | None, Field(description="Filter by category")] = None,

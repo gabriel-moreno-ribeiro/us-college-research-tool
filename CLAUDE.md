@@ -38,7 +38,7 @@ Ferramenta de pesquisa profunda sobre universidades dos EUA, voltada para quem e
 | `src/comparativo.py` | Tabela comparativa para modo batch |
 | `src/cache.py` | Cache SQLite com TTL configurável por fonte |
 
-## MCP Tools (14)
+## MCP Tools (16)
 
 ### Discovery
 - `search_university` — busca no College Scorecard, retorna candidatos com coverage info
@@ -58,6 +58,10 @@ Ferramenta de pesquisa profunda sobre universidades dos EUA, voltada para quem e
 ### Consolidation
 - `generate_full_report` — relatório completo (aceita `return_content=false`)
 - `compare_universities` — comparativo
+
+### Alumni & Sources
+- `search_alumni_web` — busca web por dados públicos de alumni + gera links LinkedIn
+- `export_sources` — exporta URLs consultadas para NotebookLM
 
 ### Scaling
 - `draft_faculty_config` — propõe seletores CSS de uma URL

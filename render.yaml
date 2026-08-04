@@ -12,4 +12,8 @@ services:
         value: "3.13"
       - key: RENDER_EXTERNAL_URL
         value: https://us-college-research-tool.onrender.com
+      - key: COLLEGE_SCORECARD_API_KEY
+        value: xZGJ5dg2YmTkmwaVUFXv2Pb1W8eShkpJYyaOhmbe
+      - key: SEMANTIC_SCHOLAR_API_KEY
+        sync: false
     plan: free

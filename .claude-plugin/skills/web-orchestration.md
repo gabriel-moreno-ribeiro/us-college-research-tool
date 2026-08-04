@@ -92,8 +92,48 @@ If web search finds information that contradicts structured data:
 3. Explain likely reason: "This difference may be due to different reporting years, methodology, or scope"
 4. Never silently pick the web number over the structured number
 
+## Alumni Research via Web Search
+
+The `search_alumni_web` tool generates web search queries and LinkedIn Alumni Tool links. The full flow:
+
+1. **Call `search_alumni_web`**: Get search queries + LinkedIn links
+2. **Execute searches** (via Exa `web_search_exa` or Firecrawl `firecrawl_search`): Run the queries from `search_queries_used` field
+3. **Scrape relevant results** (via `firecrawl_scrape`): Get content from promising URLs
+4. **Record sources**: All URLs found are auto-recorded for NotebookLM export
+5. **Present to user**: Combine web findings with LinkedIn tool links for manual browsing
+
+### What you can find via web search (public data):
+- University employment/first-destination reports (official .edu PDFs)
+- Press releases about alumni achievements
+- Startup founders and company outcomes (Crunchbase, TechCrunch)
+- Alumni association newsletters and announcements
+- Post-graduation survey results published by the career center
+
+### What requires manual LinkedIn browsing:
+- Current employer distribution of alumni
+- Career paths over time
+- Alumni count by company/role/location
+- Connection/networking opportunities
+
+Always provide BOTH: automated web findings AND LinkedIn tool links for manual exploration.
+
+## NotebookLM Export Workflow
+
+After any research session, call `export_sources` to generate URL lists for NotebookLM:
+
+1. **During research**: Every tool automatically records consulted URLs
+2. **After research**: Call `export_sources` (optionally filtered by university)
+3. **Deliver to user**: The URLs list can be directly pasted into NotebookLM
+
+When the user wants a complete research package for NotebookLM:
+1. Run the full research flow (overview, faculty, opportunities, alumni)
+2. Call `export_sources` to get all URLs
+3. Present: report markdown + source URLs for NotebookLM import
+
 ## Privacy Note
 
 When using Firecrawl or Exa, your search queries are sent to those third-party services. This is normal for web search tools, but be aware:
 - Don't include personally identifiable information in search queries unnecessarily
 - Queries like "undergraduate research for [student name]" should be rephrased as "undergraduate research programs at [university]"
+- The alumni module generates LinkedIn URLs but never scrapes LinkedIn content
+- All data comes from public web pages, official reports, and academic databases
