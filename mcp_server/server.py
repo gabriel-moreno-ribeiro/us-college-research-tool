@@ -1644,6 +1644,29 @@ def get_application_requirements(
 
 
 @mcp.tool(annotations=ToolAnnotations(read_only_hint=True))
+def get_application_calendar(
+    university_name: Annotated[str, Field(description="Full university name")],
+) -> dict[str, Any]:
+    """Get the full application calendar/timeline with all dates organized chronologically.
+
+    Returns a phased calendar from summer preparation through move-in day, with:
+    - All deadlines: ED1, ED2, EA, RD, financial aid, CSS Profile
+    - Decision notification dates (when you hear back)
+    - Interview availability window
+    - Admitted student event dates
+    - Enrollment deposit deadline
+    - International-specific dates: visa, I-20, pre-orientation
+
+    Unlike get_application_requirements (which covers WHAT to submit), this tool
+    covers WHEN to do everything, in chronological order.
+
+    Dates change every year — always verify they're for the current cycle."""
+    from src.application_requirements import build_application_calendar_response
+    result = build_application_calendar_response(university_name)
+    return _ok_response(result)
+
+
+@mcp.tool(annotations=ToolAnnotations(read_only_hint=True))
 def get_program_curriculum(
     university_name: Annotated[str, Field(description="Full university name")],
     program_name: Annotated[str, Field(description="Program name (e.g. 'Electrical and Computer Engineering')")],
@@ -1696,6 +1719,124 @@ def get_country_community(
     - Recruitment events in that country"""
     from src.country_community import build_country_community_response
     result = build_country_community_response(university_name, country)
+    return _ok_response(result)
+
+
+# ============================================================
+# QUALITATIVE & STUDENT LIFE TOOLS
+# ============================================================
+
+@mcp.tool(annotations=ToolAnnotations(read_only_hint=True))
+def get_university_identity(
+    university_name: Annotated[str, Field(description="Full university name")],
+) -> dict[str, Any]:
+    """Get qualitative university identity: motto, mission, campus vibe, traditions,
+    what makes it unique, and arguments for 'Why this university?'.
+
+    Returns search queries for the model to execute via web search. Fill in the
+    expected_fields structure with sourced data. Every claim needs a source_url.
+
+    Use this to build the narrative 'Why [University]?' section of an application."""
+    from src.university_identity import build_university_identity_response
+    result = build_university_identity_response(university_name)
+    return _ok_response(result)
+
+
+@mcp.tool(annotations=ToolAnnotations(read_only_hint=True))
+def get_fun_facts(
+    university_name: Annotated[str, Field(description="Full university name")],
+) -> dict[str, Any]:
+    """Get interesting and fun facts about a university: trivia, famous alumni,
+    historical firsts, inventions originated there, mascot story, and pop culture.
+
+    Useful for essay writing (showing genuine knowledge of the school) and
+    for making an informed decision about fit.
+
+    Returns search queries — execute them and compile the facts with sources."""
+    from src.university_identity import build_fun_facts_response
+    result = build_fun_facts_response(university_name)
+    return _ok_response(result)
+
+
+@mcp.tool(annotations=ToolAnnotations(read_only_hint=True))
+def get_community_engagement(
+    university_name: Annotated[str, Field(description="Full university name")],
+) -> dict[str, Any]:
+    """Get community engagement data: student organizations directory, community service
+    programs, student government, annual events, Greek life, and cultural organizations.
+
+    Covers clubs BEYOND tech/entrepreneurship — arts, service, cultural, political,
+    sports, religious, etc. Provides the clubs directory URL for browsing all options.
+
+    Key data: total number of student organizations, how to start a new club,
+    and major campus events/traditions."""
+    from src.university_identity import build_community_engagement_response
+    result = build_community_engagement_response(university_name)
+    return _ok_response(result)
+
+
+@mcp.tool(annotations=ToolAnnotations(read_only_hint=True))
+def get_student_support(
+    university_name: Annotated[str, Field(description="Full university name")],
+) -> dict[str, Any]:
+    """Get student support and diversity resources: international student services,
+    multicultural/diversity center, counseling, academic support (tutoring, writing center),
+    disability services, first-gen programs, and LGBTQ+ resources.
+
+    Especially important for international students: ongoing support services
+    (not just admissions), mental health access, and academic help availability.
+
+    Returns search queries to locate each center's name, URL, and services."""
+    from src.university_identity import build_student_support_response
+    result = build_student_support_response(university_name)
+    return _ok_response(result)
+
+
+@mcp.tool(annotations=ToolAnnotations(read_only_hint=True))
+def get_contacts_and_visits(
+    university_name: Annotated[str, Field(description="Full university name")],
+) -> dict[str, Any]:
+    """Get consolidated contact information and visit options: admissions office contact,
+    campus visit booking, info session registration, student ambassador programs,
+    regional admission counselors, open house dates, and department contacts.
+
+    This is the 'action items' tool — what to do AFTER research to engage with the school.
+    Provides direct URLs for scheduling visits and registering for events."""
+    from src.university_identity import build_contacts_response
+    result = build_contacts_response(university_name)
+    return _ok_response(result)
+
+
+@mcp.tool(annotations=ToolAnnotations(read_only_hint=True))
+def get_student_life(
+    university_name: Annotated[str, Field(description="Full university name")],
+) -> dict[str, Any]:
+    """Get student life details: publications (newspaper, journals), honors program,
+    performing arts, varsity/club/intramural sports, study abroad (engineering-specific),
+    student media (radio, TV), dining, and recreation facilities.
+
+    Covers the non-academic experience that shapes daily student life. Useful for
+    assessing overall quality of life and extracurricular opportunities.
+
+    Returns search queries — execute to fill in the expected_fields structure."""
+    from src.university_identity import build_student_life_response
+    result = build_student_life_response(university_name)
+    return _ok_response(result)
+
+
+@mcp.tool(annotations=ToolAnnotations(read_only_hint=True))
+def get_location_exploration(
+    university_name: Annotated[str, Field(description="Full university name")],
+) -> dict[str, Any]:
+    """Get city and location exploration data: cultural attractions, food scene,
+    nightlife, outdoor activities, day trips, student hangout spots, and transit.
+
+    Complements get_campus_life (which covers housing/safety/costs) with the FUN side:
+    what to do on weekends, where to eat, what to explore nearby.
+
+    Targets student-oriented experiences, not generic tourism content."""
+    from src.university_identity import build_location_exploration_response
+    result = build_location_exploration_response(university_name)
     return _ok_response(result)
 
 

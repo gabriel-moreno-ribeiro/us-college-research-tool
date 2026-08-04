@@ -100,3 +100,128 @@ def test_record_sources():
     assert result["status"] == "OK"
     assert result["data"]["recorded"] == 2
     assert result["data"]["total_submitted"] == 3
+
+
+# --- Tests for qualitative/student life tools ---
+
+def test_get_university_identity():
+    """Should return search queries and expected fields."""
+    from mcp_server.server import get_university_identity
+    result = get_university_identity("Northwestern University")
+    assert result["status"] == "OK"
+    assert len(result["data"]["search_queries"]) >= 5
+    assert "motto" in result["data"]["expected_fields"]
+    assert "traditions" in result["data"]["expected_fields"]
+    assert "reasons_to_attend" in result["data"]["expected_fields"]
+
+
+def test_get_fun_facts():
+    """Should return search queries for trivia/facts."""
+    from mcp_server.server import get_fun_facts
+    result = get_fun_facts("Northwestern University")
+    assert result["status"] == "OK"
+    assert len(result["data"]["search_queries"]) >= 4
+    assert "fun_facts" in result["data"]["expected_fields"]
+    assert "famous_alumni" in result["data"]["expected_fields"]
+    assert "mascot" in result["data"]["expected_fields"]
+
+
+def test_get_community_engagement():
+    """Should return clubs/service/events queries."""
+    from mcp_server.server import get_community_engagement
+    result = get_community_engagement("Northwestern University")
+    assert result["status"] == "OK"
+    assert len(result["data"]["search_queries"]) >= 5
+    assert "clubs_directory_url" in result["data"]["expected_fields"]
+    assert "greek_life" in result["data"]["expected_fields"]
+
+
+def test_get_student_support():
+    """Should return support centers queries."""
+    from mcp_server.server import get_student_support
+    result = get_student_support("Northwestern University")
+    assert result["status"] == "OK"
+    assert len(result["data"]["search_queries"]) >= 5
+    assert "international_student_services" in result["data"]["expected_fields"]
+    assert "counseling_services" in result["data"]["expected_fields"]
+
+
+def test_get_contacts_and_visits():
+    """Should return admissions/visit contact queries."""
+    from mcp_server.server import get_contacts_and_visits
+    result = get_contacts_and_visits("Northwestern University")
+    assert result["status"] == "OK"
+    assert len(result["data"]["search_queries"]) >= 4
+    assert "admissions_office" in result["data"]["expected_fields"]
+    assert "campus_visit" in result["data"]["expected_fields"]
+    assert "info_sessions" in result["data"]["expected_fields"]
+
+
+def test_get_student_life():
+    """Should return student life queries."""
+    from mcp_server.server import get_student_life
+    result = get_student_life("Northwestern University")
+    assert result["status"] == "OK"
+    assert len(result["data"]["search_queries"]) >= 5
+    assert "honors_program" in result["data"]["expected_fields"]
+    assert "varsity_sports" in result["data"]["expected_fields"]
+    assert "study_abroad" in result["data"]["expected_fields"]
+
+
+def test_get_location_exploration():
+    """Should return city/location queries with correct city."""
+    from mcp_server.server import get_location_exploration
+    result = get_location_exploration("Northwestern University")
+    assert result["status"] == "OK"
+    assert "Evanston" in result["data"]["city"]
+    assert len(result["data"]["search_queries"]) >= 5
+    assert "food_and_restaurants" in result["data"]["expected_fields"]
+    assert "day_trips" in result["data"]["expected_fields"]
+
+
+def test_get_application_calendar():
+    """Should return chronological calendar with milestones and key dates."""
+    from mcp_server.server import get_application_calendar
+    result = get_application_calendar("Northwestern University")
+    assert result["status"] == "OK"
+    data = result["data"]
+    assert len(data["search_queries"]) >= 10
+    assert "calendar_template" in data
+    milestones = data["calendar_template"]["milestones"]
+    assert len(milestones) == 5
+    assert milestones[0]["phase"].startswith("Preparation")
+    assert "key_dates_summary" in data
+    assert "ed1_deadline" in data["key_dates_summary"]
+    assert "rd_deadline" in data["key_dates_summary"]
+    assert "css_profile_deadline_ed" in data["key_dates_summary"]
+    assert "idoc_deadline_ed" in data["key_dates_summary"]
+    # Scholarship and aid deadlines section
+    assert "scholarships_and_aid_deadlines" in data
+    sched = data["scholarships_and_aid_deadlines"]
+    assert "css_profile" in sched
+    assert "fafsa" in sched
+    assert "idoc" in sched
+    assert "merit_scholarships" in sched
+    assert "need_based_aid" in sched
+    assert "external_scholarships_to_consider" in sched
+    assert "aid_appeal_process" in sched
+    assert len(sched["external_scholarships_to_consider"]) >= 2
+    # International notes
+    assert "international_specific_notes" in data
+    assert len(data["international_specific_notes"]) >= 5
+
+
+def test_new_tools_work_for_unknown_university():
+    """All new tools should work for any university, not just configured ones."""
+    from mcp_server.server import (
+        get_university_identity, get_fun_facts, get_community_engagement,
+        get_student_support, get_contacts_and_visits, get_student_life,
+        get_location_exploration,
+    )
+    for tool_fn in [get_university_identity, get_fun_facts, get_community_engagement,
+                    get_student_support, get_contacts_and_visits, get_student_life,
+                    get_location_exploration]:
+        result = tool_fn("Stanford University")
+        assert result["status"] == "OK"
+        assert "search_queries" in result["data"]
+        assert len(result["data"]["search_queries"]) >= 4

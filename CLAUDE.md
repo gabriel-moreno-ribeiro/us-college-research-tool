@@ -41,7 +41,7 @@ Ferramenta de pesquisa profunda sobre universidades dos EUA, voltada para quem e
 | `src/rankings.py` | Rankings universitários (THE, QS, US News, ARWU, CSRankings) |
 | `src/country_community.py` | Comunidade do país de origem (BRASA, orgs, alumni) |
 
-## MCP Tools (28)
+## MCP Tools (36)
 
 ### Discovery
 - `search_university` — busca no College Scorecard, retorna candidatos com coverage info
@@ -60,8 +60,18 @@ Ferramenta de pesquisa profunda sobre universidades dos EUA, voltada para quem e
 - `get_rankings` — THE, QS, US News, ARWU, CSRankings (geral + por subject)
 - `get_country_community` — BRASA, orgs estudantis, alumni no país, bolsas, admission officers
 - `get_application_requirements` — deadlines, essays, recomendações, entrevista, fee waiver
+- `get_application_calendar` — full chronological timeline (preparation → move-in) with all dates
 - `get_program_curriculum` — requisitos do major, créditos, capstone, minors, dual degree
 - `get_campus_life` — clima, localização, housing, custo de vida, segurança
+
+### Qualitative & Student Life
+- `get_university_identity` — motto, mission, vibe, traditions, why attend
+- `get_fun_facts` — trivia, famous alumni, inventions, mascot, pop culture
+- `get_community_engagement` — clubs directory, service, events, Greek life, cultural orgs
+- `get_student_support` — international services, diversity center, counseling, academic support
+- `get_contacts_and_visits` — admissions contact, campus visits, info sessions, ambassadors
+- `get_student_life` — publications, honors program, arts, sports, study abroad, dining
+- `get_location_exploration` — city attractions, food, nightlife, day trips, transit
 
 ### Faculty & Research
 - `list_faculty` — paginada (default 20, max 50)
